@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Đi tới quán cà phê</title>
+<style>
+:root{--bg:#fbeef5;--ink:#3a1f2e;--muted:#8a6a7c;--accent:#e2639a;--card:#ffffff}
+@media (prefers-color-scheme:dark){:root{--bg:#1d1420;--ink:#f6e8f0;--muted:#b897aa;--card:#2a1d2c}}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+ background:var(--bg);color:var(--ink);font-family:ui-rounded,"Nunito","Segoe UI",system-ui,sans-serif;padding:24px 16px}
+h1{margin:0;font-size:clamp(20px,4vw,28px);letter-spacing:.5px}
+p.sub{margin:0;color:var(--muted);font-size:14px}
+.stage{width:min(960px,100%);aspect-ratio:200/120;border-radius:18px;overflow:hidden;
+ box-shadow:0 18px 40px -18px rgba(226,99,154,.55),0 0 0 4px var(--card)}
+canvas{width:100%;height:100%;display:block;image-rendering:pixelated;image-rendering:crisp-edges}
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
+button{font:inherit;font-weight:700;border:0;border-radius:999px;padding:10px 18px;cursor:pointer;
+ background:var(--accent);color:#fff;box-shadow:0 4px 0 #b4446f}
+button.ghost{background:var(--card);color:var(--accent);box-shadow:0 4px 0 rgba(180,68,111,.35)}
+button:active{transform:translateY(2px);box-shadow:0 2px 0 #b4446f}
+label{font-size:14px;color:var(--muted);display:flex;gap:8px;align-items:center}
+input[type=range]{accent-color:var(--accent)}
+</style>
+</head>
+<body>
+<h1>Đi tới quán cà phê ☕</h1>
+<p class="sub">Pixel art · mây trôi, núi xa và những chú bướm nhỏ</p>
+<div class="stage"><canvas id="c" width="200" height="120" aria-label="Hoạt ảnh cô gái váy hồng đi tới quán cà phê"></canvas></div>
+<div class="bar">
+ <button id="play">⏸ Tạm dừng</button>
+ <button id="again" class="ghost">↺ Phát lại</button>
+ <label>Tốc độ <input id="spd" type="range" min="0.5" max="2" step="0.25" value="1"></label>
+</div>
+<script>
+// Pixel scene renderer: render(t) -> {w,h,data:Uint8Array RGB}
+const Scene=(()=>{
+const CW=200,CH=120,WALK=120,IDLEN=36,N=WALK+IDLEN;
+const GIRL=".103K2.5K2.25K6R2K.3KR2K.21K3H6RLRK3RLRK.19K2H9R4pR4K.18KH14pRpK3.18K2H4h3H7RHRK2.18KH4h2H9RH3RHK.17KH21K.17KH21K.17KH7sH6sH6K.16KH5sH2SH2sH2sSH6K.16KH5K4sHSsHK4sH3K.16KH2hHsSYE2SsS2sYE2S2H3K.16KH2hHS2E3S5E3S2HhH2K.15KH4S2e2YS5e2YS2H4K.15KH4S2e3S5e3S2H4K.15KHhH2SB2S9B2SH4K.15KH4S6sMsS5H3hHK.15KH5S12H6K.15KH6S10H7K.15KH7S8H8K.15KH10S3H10K.15KhH9S3H6FH3K.15KhH4L2P2W5P2L2qF2H2K.15KH4L3P3WPWPFPLF2fF2hK.14KH5pLP7qF2PF3qHhHK.13KH5S2P6F2fF5HFH2K.13KH4S2HP7F2qFfF2qF2HK.13KH2hHS2HP5RGP2F3qF2fF2K.13KH4S2HR9S2H3F2qGK.13KH4S2P4RP3RgS3H3GgHK.13KH4S2p2P6gPS2sH3gH2K.13KH3S3pP9GPG2HGH3K.13KH3S3pP10GLG2HGH2K.13KH5p2P11GPGH4K.13KH4p2P13LPH4K.13KH4p2P13LPH4K.14KHK2p2P13LPKHK2.16K2p2P15LPK.19Kp2P15LPK.18Kp2P17LPK.17Kp2P17LPK.17Kp2P17LPK.16Kp2P19LPK.15Kp2LpLpLpLpLpLpLpLpLpL3K.16K7S3K3S3K7.23KS3K.KS3K.29KS3K.KS3K.29KW3K.KW3K.29KW3K.KW3K.29KW3K.KW3K.29KW3K.KW3K.28KO4K.KO4K.27KO4K.KO4K.28K4.3K4.134";
+const PAL={K:'3a1f2e',H:'2b1b24',h:'5a3a4e',S:'ffdcc8',s:'f2b8a2',E:'3a1f2e',Y:'ffffff',B:'ff9fb4',M:'d84a62',P:'ff8fbf',p:'e2639a',L:'ffc4dc',R:'ff5c9a',W:'ffffff',O:'c2436e',G:'6aa84f',g:'4e8a3a',F:'ffe3ee',f:'f06a9c',e:'7a3a5a',q:'f7a6c4'};
+const hx=h=>[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];
+const grid=[];{const re=/([^\d])(\d*)/g;let m,a=[];while((m=re.exec(GIRL))){const c=m[2]?+m[2]:1;for(let i=0;i<c;i++)a.push(m[1]);}for(let y=0;y<60;y++)grid.push(a.slice(y*40,y*40+40));}
+function sprite(phase){const px=new Array(40*60).fill(null);
+ const blit=(r0,r1,c0,c1,dx,dy)=>{for(let y=r0;y<=r1;y++)for(let x=c0;x<=c1;x++){const ch=grid[y][x];if(ch==='.')continue;const X=x+dx,Y=y+dy;if(X>=0&&X<40&&Y>=0&&Y<60)px[Y*40+X]=PAL[ch];}};
+ const bob=(phase===1||phase===3)?-1:0;let lL=[0,0],lR=[0,0];
+ if(phase===0){lL=[-1,0];lR=[1,-2];} if(phase===2){lL=[-1,-2];lR=[1,0];}
+ for(const [[c0,c1],[dx,dy]] of [[[14,19],lL],[[21,26],lR]]){blit(48,48,c0,c1,dx,dy-1);blit(48,56,c0,c1,dx,dy);}
+ blit(0,47,0,39,0,bob);return px;}
+const SPR=[0,1,2,3].map(sprite),IDLE=sprite(-1);
+// seeded random
+let seed=3;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
+const FL=['ff8fbf','ffffff','ffd34d','c9a0ff'];
+const flowers=[...Array(40)].map(()=>[Math.floor(rnd()*400),rnd()<.5?0:1,FL[Math.floor(rnd()*4)]]);
+const stones=[...Array(30)].map(()=>[Math.floor(rnd()*400),101+Math.floor(rnd()*11)]);
+const SKY=['c9b6f2','e6c2f0','ffd0e4','ffe2d6'].map(hx);
+const FONT={C:['111','100','100','100','111'],A:['010','101','111','101','101'],F:['111','100','110','100','100'],E:['111','100','110','100','111']};
+function render(t){
+ const d=new Uint8Array(CW*CH*3);
+ const put=(x,y,c)=>{x=Math.floor(x);y=Math.floor(y);if(x<0||y<0||x>=CW||y>=CH)return;if(typeof c==='string')c=hx(c);const i=(y*CW+x)*3;d[i]=c[0];d[i+1]=c[1];d[i+2]=c[2];};
+ const s=Math.min(t,WALK);
+ for(let y=0;y<CH;y++){const tt=Math.min(1,y/80),seg=tt*3,i=Math.min(2,Math.floor(seg));let f=Math.round((seg-i)*4)/4;
+  const c=[0,1,2].map(k=>Math.round(SKY[i][k]+(SKY[i+1][k]-SKY[i][k])*f));for(let x=0;x<CW;x++)put(x,y,c);}
+ for(let y=8;y<20;y++)for(let x=160;x<172;x++)if((x-165.5)**2+(y-13.5)**2<=30)put(x,y,'fff2c8');
+ const cloud=(cx,cy,w)=>{for(let dx=-w;dx<=w;dx++)for(let dy=-6;dy<4;dy++){const r=(dx/w)**2+((dy+1)/4)**2,b=.35*Math.sin(dx*.9);if(r<=1+(dy<0?b:0))put(cx+dx,cy+dy,dy>=2?'f3dcef':'ffffff');}};
+ for(const [cx,cy,w,sp] of [[30,18,12,.25],[110,12,9,.2],[175,26,14,.3],[250,16,10,.25]]){const X=((cx-s*sp-t*.1)%280+280)%280-40;cloud(Math.floor(X),cy,w);}
+ const ridge=(off,base,fr,col,hi,snow)=>{for(let x=0;x<CW;x++){const wx=x+off;let h=base;for(const [a,p,ph] of fr)h-=a*Math.sin(wx*2*Math.PI/p+ph);h=Math.floor(h);
+   for(let y=h;y<CH;y++)put(x,y,col);put(x,h,hi);if(snow&&h<snow)for(let y=h;y<Math.min(h+2,CH);y++)put(x,y,'f6f0ff');}};
+ ridge(s*.15,62,[[10,90,0],[6,47,1.3],[3,23,2]],'b8a2d8','d6c6ee',52);
+ ridge(s*.35,80,[[7,70,.5],[4,31,2.1],[2,17,1]],'9cbf8f','b8d6a6',0);
+ for(let y=90;y<CH;y++)for(let x=0;x<CW;x++)put(x,y,y<98?'8fcf7a':(y<114?'f2dcc0':'7fbf6a'));
+ for(let x=0;x<CW;x++){put(x,98,'d9bf9e');put(x,113,'d9bf9e');}
+ for(const [wx,wy] of stones){const x=(((wx-s)%400)+400)%400-100;put(x,wy,'d0b490');}
+ for(const [wx,row,col] of flowers){const x=(((wx-s)%400)+400)%400-100,y=row===0?93:116;if(x<CW-1){put(x,y+1,'4e8a3a');put(x,y,col);}}
+ // cafe
+ const X0=108+(WALK-s);
+ const p=(x,y,c)=>put(X0+x,y,c),rect=(x0,y0,x1,y1,c)=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)p(x,y,c);};
+ const base=108;
+ rect(0,58,55,base,'3a1f2e');rect(1,59,54,base-1,'fff3e6');rect(1,92,54,base-1,'f2d4c4');for(let x=1;x<55;x+=4)rect(x,92,x,base-1,'e8c0b0');
+ for(let i=0;i<=12;i++){rect(27-2*i-2,46+i,28+2*i+2,46+i,'3a1f2e');}       // gable roof outline
+ for(let i=1;i<=11;i++){rect(27-2*i,46+i,28+2*i,46+i,i%2?'b55a7c':'c96a8c');}
+ rect(-3,58,58,58,'3a1f2e');
+ rect(14,47,41,55,'3a1f2e');rect(15,48,40,54,'fff3e6');                      // sign board
+ let sx=18;for(const ch of 'CAFE'){FONT[ch].forEach((row,yy)=>[...row].forEach((v,xx)=>{if(v==='1')p(sx+xx,49+yy,'b55a7c');}));sx+=5;}
+ rect(36,51,38,53,'7a4a3a');p(39,52,'7a4a3a');p(36,50,'7a4a3a');p(38,50,'7a4a3a'); // cup
+ for(let k=0;k<3;k++){const yy=48-((Math.floor(t/3)+k*2)%6),xx=37+((Math.floor(t/4)+k)%2);if(yy>42)p(xx,yy,'ffffff');}
+ rect(-2,62,57,62,'3a1f2e');for(let x=-1;x<57;x++)rect(x,63,x,67,Math.floor((x+4)/4)%2===0?'ffffff':'ff8fbf');
+ for(let x=-1;x<57;x+=4){p(x+1,68,'ff8fbf');p(x+2,68,'ff8fbf');}rect(-2,67,57,67,'e2639a');
+ rect(5,72,22,88,'3a1f2e');rect(6,73,21,87,'bfe3ef');rect(13,73,14,87,'3a1f2e');rect(6,80,21,80,'3a1f2e');rect(7,74,9,75,'ffffff');rect(16,74,18,75,'ffffff');
+ rect(4,89,23,90,'3a1f2e');for(let x=5;x<23;x+=3){p(x,88,'ff5c9a');p(x+1,88,'6aa84f');}
+ rect(30,74,46,base-1,'3a1f2e');rect(31,75,45,base-1,'a8664e');rect(33,77,43,88,'c98a6a');rect(34,78,42,87,'ffe9b8');p(43,94,'ffd34d');p(43,95,'ffd34d');
+ rect(48,70,50,73,'ffd34d');p(49,69,'3a1f2e');
+ rect(25,100,28,base-1,'c2436e');rect(24,95,29,99,'6aa84f');p(26,94,'ff8fbf');
+ rect(49,100,52,base-1,'c2436e');rect(48,95,53,99,'6aa84f');p(51,94,'ffd34d');
+ // girl
+ const GX=40,GY=50,spr=t<WALK?SPR[Math.floor(t/3)%4]:IDLE;
+ for(let y=0;y<60;y++)for(let x=0;x<40;x++){const c=spr[y*40+x];if(c)put(GX+x,GY+y,c);}
+ if(t>=WALK+6&&Math.floor((t-WALK)/6)%2===0)for(const [a,b] of [[1,0],[3,0],[0,1],[1,1],[2,1],[3,1],[4,1],[1,2],[2,2],[3,2],[2,3]])put(GX+15+a,GY-6+b,'ff5c9a');
+ // butterflies
+ const cx=GX+20,cy=GY+28;
+ [['ff5c9a',30,22,.09,0],['ffd34d',26,16,.12,2.1],['c9a0ff',34,26,.07,4.2]].forEach(([col,ax,ay,sp,ph],k)=>{
+  const a=t*sp+ph,bx=Math.floor(cx+ax*Math.cos(a)),by=Math.floor(cy-6+ay*Math.sin(2*a)/1.6+3*Math.sin(t*.4+k));
+  put(bx,by,'3a1f2e');put(bx,by+1,'3a1f2e');
+  const wings=(Math.floor(t/2)+k)%2===0?[[-2,-1],[-1,-1],[-2,0],[-1,0],[-1,1],[1,-1],[2,-1],[1,0],[2,0],[1,1]]:[[-1,-1],[-1,0],[1,-1],[1,0]];
+  for(const [u,v] of wings)put(bx+u,by+v,col);});
+ return {w:CW,h:CH,data:d};}
+return {render,N,WALK,CW,CH};})();
+
+
+const cv=document.getElementById('c'),ctx=cv.getContext('2d'),img=ctx.createImageData(Scene.CW,Scene.CH);
+let t=0,playing=true,acc=0,last=performance.now(),speed=1;
+function draw(){const f=Scene.render(t).data;for(let i=0,j=0;i<f.length;i+=3,j+=4){img.data[j]=f[i];img.data[j+1]=f[i+1];img.data[j+2]=f[i+2];img.data[j+3]=255;}ctx.putImageData(img,0,0);}
+function loop(now){const dt=now-last;last=now;if(playing){acc+=dt*speed;while(acc>=83){acc-=83;t=(t+1)%Scene.N;}draw();}requestAnimationFrame(loop);}
+document.getElementById('play').onclick=e=>{playing=!playing;e.target.textContent=playing?'⏸ Tạm dừng':'▶ Phát';};
+document.getElementById('again').onclick=()=>{t=0;acc=0;draw();};
+document.getElementById('spd').oninput=e=>speed=+e.target.value;
+draw();requestAnimationFrame(loop);
+</script>
+</body>
+</html>
