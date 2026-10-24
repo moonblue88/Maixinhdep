@@ -3,17 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>index</title>
+<title>Đi biển ngắm cảnh</title>
 <style>
-:root{--bg:#fbeef5;--ink:#3a1f2e;--muted:#8a6a7c;--accent:#e2639a;--card:#ffffff}
-@media (prefers-color-scheme:dark){:root{--bg:#1d1420;--ink:#f6e8f0;--muted:#b897aa;--card:#2a1d2c}}
+:root{--bg:#eaf5fb;--ink:#22324a;--muted:#6a8299;--accent:#e2639a;--card:#ffffff}
+@media (prefers-color-scheme:dark){:root{--bg:#121b26;--ink:#e8f1f8;--muted:#93a9bd;--card:#1e2a38}}
 *{box-sizing:border-box}
 body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
  background:var(--bg);color:var(--ink);font-family:ui-rounded,"Nunito","Segoe UI",system-ui,sans-serif;padding:24px 16px}
 h1{margin:0;font-size:clamp(20px,4vw,28px);letter-spacing:.5px}
-p.sub{margin:0;color:var(--muted);font-size:14px}
+p.sub{margin:0;color:var(--muted);font-size:14px;text-align:center}
 .stage{width:min(960px,100%);aspect-ratio:200/120;border-radius:18px;overflow:hidden;
- box-shadow:0 18px 40px -18px rgba(226,99,154,.55),0 0 0 4px var(--card)}
+ box-shadow:0 18px 40px -18px rgba(74,168,208,.6),0 0 0 4px var(--card)}
 canvas{width:100%;height:100%;display:block;image-rendering:pixelated;image-rendering:crisp-edges}
 .bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
 button{font:inherit;font-weight:700;border:0;border-radius:999px;padding:10px 18px;cursor:pointer;
@@ -25,9 +25,9 @@ input[type=range]{accent-color:var(--accent)}
 </style>
 </head>
 <body>
-<h1>Đi tới quán cà phê ☕</h1>
-<p class="sub">Pixel art · mây trôi, núi xa và những chú bướm nhỏ</p>
-<div class="stage"><canvas id="c" width="200" height="120" aria-label="Hoạt ảnh cô gái váy hồng đi tới quán cà phê"></canvas></div>
+<h1>Đi biển ngắm cảnh 🌊</h1>
+<p class="sub">Pixel art · sóng vỗ bờ cát, đảo đá xa xa và những cánh hải âu</p>
+<div class="stage"><canvas id="c" width="200" height="120" aria-label="Hoạt ảnh cô gái váy hồng đi dạo trên bãi biển rồi dừng lại ngắm biển"></canvas></div>
 <div class="bar">
  <button id="play">⏸ Tạm dừng</button>
  <button id="again" class="ghost">↺ Phát lại</button>
@@ -36,7 +36,7 @@ input[type=range]{accent-color:var(--accent)}
 <script>
 // Pixel scene renderer: render(t) -> {w,h,data:Uint8Array RGB}
 const Scene=(()=>{
-const CW=200,CH=120,WALK=120,IDLEN=36,N=WALK+IDLEN;
+const CW=200,CH=120,WALK=120,IDLEN=48,N=WALK+IDLEN,HZ=66;
 const GIRL=".103K2.5K2.25K6R2K.3KR2K.21K3H6RLRK3RLRK.19K2H9R4pR4K.18KH14pRpK3.18K2H4h3H7RHRK2.18KH4h2H9RH3RHK.17KH21K.17KH21K.17KH7sH6sH6K.16KH5sH2SH2sH2sSH6K.16KH5K4sHSsHK4sH3K.16KH2hHsSYE2SsS2sYE2S2H3K.16KH2hHS2E3S5E3S2HhH2K.15KH4S2e2YS5e2YS2H4K.15KH4S2e3S5e3S2H4K.15KHhH2SB2S9B2SH4K.15KH4S6sMsS5H3hHK.15KH5S12H6K.15KH6S10H7K.15KH7S8H8K.15KH10S3H10K.15KhH9S3H6FH3K.15KhH4L2P2W5P2L2qF2H2K.15KH4L3P3WPWPFPLF2fF2hK.14KH5pLP7qF2PF3qHhHK.13KH5S2P6F2fF5HFH2K.13KH4S2HP7F2qFfF2qF2HK.13KH2hHS2HP5RGP2F3qF2fF2K.13KH4S2HR9S2H3F2qGK.13KH4S2P4RP3RgS3H3GgHK.13KH4S2p2P6gPS2sH3gH2K.13KH3S3pP9GPG2HGH3K.13KH3S3pP10GLG2HGH2K.13KH5p2P11GPGH4K.13KH4p2P13LPH4K.13KH4p2P13LPH4K.14KHK2p2P13LPKHK2.16K2p2P15LPK.19Kp2P15LPK.18Kp2P17LPK.17Kp2P17LPK.17Kp2P17LPK.16Kp2P19LPK.15Kp2LpLpLpLpLpLpLpLpLpL3K.16K7S3K3S3K7.23KS3K.KS3K.29KS3K.KS3K.29KW3K.KW3K.29KW3K.KW3K.29KW3K.KW3K.29KW3K.KW3K.28KO4K.KO4K.27KO4K.KO4K.28K4.3K4.134";
 const PAL={K:'3a1f2e',H:'2b1b24',h:'5a3a4e',S:'ffdcc8',s:'f2b8a2',E:'3a1f2e',Y:'ffffff',B:'ff9fb4',M:'d84a62',P:'ff8fbf',p:'e2639a',L:'ffc4dc',R:'ff5c9a',W:'ffffff',O:'c2436e',G:'6aa84f',g:'4e8a3a',F:'ffe3ee',f:'f06a9c',e:'7a3a5a',q:'f7a6c4'};
 const hx=h=>[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];
@@ -49,60 +49,87 @@ function sprite(phase){const px=new Array(40*60).fill(null);
  blit(0,47,0,39,0,bob);return px;}
 const SPR=[0,1,2,3].map(sprite),IDLE=sprite(-1);
 // seeded random
-let seed=3;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
-const FL=['ff8fbf','ffffff','ffd34d','c9a0ff'];
-const flowers=[...Array(40)].map(()=>[Math.floor(rnd()*400),rnd()<.5?0:1,FL[Math.floor(rnd()*4)]]);
-const stones=[...Array(30)].map(()=>[Math.floor(rnd()*400),101+Math.floor(rnd()*11)]);
-const SKY=['c9b6f2','e6c2f0','ffd0e4','ffe2d6'].map(hx);
-const FONT={C:['111','100','100','100','111'],A:['010','101','111','101','101'],F:['111','100','110','100','100'],E:['111','100','110','100','111']};
+let seed=7;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
+const shells=[...Array(34)].map(()=>[Math.floor(rnd()*400),101+Math.floor(rnd()*16),Math.floor(rnd()*3)]);
+const islands=[[20,16,22],[64,9,12],[118,20,27],[176,7,9],[226,13,18],[268,10,14]];
+const SKY=['8fcbf0','b4dcf5','ffe0ec','ffeedd'].map(hx);
+const SEA0=hx('8ed3ea'),SEA1=hx('3f9fcb');
 function render(t){
  const d=new Uint8Array(CW*CH*3);
  const put=(x,y,c)=>{x=Math.floor(x);y=Math.floor(y);if(x<0||y<0||x>=CW||y>=CH)return;if(typeof c==='string')c=hx(c);const i=(y*CW+x)*3;d[i]=c[0];d[i+1]=c[1];d[i+2]=c[2];};
  const s=Math.min(t,WALK);
- for(let y=0;y<CH;y++){const tt=Math.min(1,y/80),seg=tt*3,i=Math.min(2,Math.floor(seg));let f=Math.round((seg-i)*4)/4;
+ // sky
+ for(let y=0;y<HZ;y++){const tt=y/HZ,seg=tt*3,i=Math.min(2,Math.floor(seg));let f=Math.round((seg-i)*4)/4;
   const c=[0,1,2].map(k=>Math.round(SKY[i][k]+(SKY[i+1][k]-SKY[i][k])*f));for(let x=0;x<CW;x++)put(x,y,c);}
- for(let y=8;y<20;y++)for(let x=160;x<172;x++)if((x-165.5)**2+(y-13.5)**2<=30)put(x,y,'fff2c8');
- const cloud=(cx,cy,w)=>{for(let dx=-w;dx<=w;dx++)for(let dy=-6;dy<4;dy++){const r=(dx/w)**2+((dy+1)/4)**2,b=.35*Math.sin(dx*.9);if(r<=1+(dy<0?b:0))put(cx+dx,cy+dy,dy>=2?'f3dcef':'ffffff');}};
- for(const [cx,cy,w,sp] of [[30,18,12,.25],[110,12,9,.2],[175,26,14,.3],[250,16,10,.25]]){const X=((cx-s*sp-t*.1)%280+280)%280-40;cloud(Math.floor(X),cy,w);}
- const ridge=(off,base,fr,col,hi,snow)=>{for(let x=0;x<CW;x++){const wx=x+off;let h=base;for(const [a,p,ph] of fr)h-=a*Math.sin(wx*2*Math.PI/p+ph);h=Math.floor(h);
-   for(let y=h;y<CH;y++)put(x,y,col);put(x,h,hi);if(snow&&h<snow)for(let y=h;y<Math.min(h+2,CH);y++)put(x,y,'f6f0ff');}};
- ridge(s*.15,62,[[10,90,0],[6,47,1.3],[3,23,2]],'b8a2d8','d6c6ee',52);
- ridge(s*.35,80,[[7,70,.5],[4,31,2.1],[2,17,1]],'9cbf8f','b8d6a6',0);
- for(let y=90;y<CH;y++)for(let x=0;x<CW;x++)put(x,y,y<98?'8fcf7a':(y<114?'f2dcc0':'7fbf6a'));
- for(let x=0;x<CW;x++){put(x,98,'d9bf9e');put(x,113,'d9bf9e');}
- for(const [wx,wy] of stones){const x=(((wx-s)%400)+400)%400-100;put(x,wy,'d0b490');}
- for(const [wx,row,col] of flowers){const x=(((wx-s)%400)+400)%400-100,y=row===0?93:116;if(x<CW-1){put(x,y+1,'4e8a3a');put(x,y,col);}}
- // cafe
+ // sun
+ for(let y=6;y<22;y++)for(let x=158;x<174;x++){const r=(x-165.5)**2+(y-13.5)**2;if(r<=44)put(x,y,r<=30?'fff2c8':'ffe4b0');}
+ // clouds
+ const cloud=(cx,cy,w)=>{for(let dx=-w;dx<=w;dx++)for(let dy=-6;dy<4;dy++){const r=(dx/w)**2+((dy+1)/4)**2,b=.35*Math.sin(dx*.9);if(r<=1+(dy<0?b:0))put(cx+dx,cy+dy,dy>=2?'e4eef8':'ffffff');}};
+ for(const [cx,cy,w,sp] of [[30,18,12,.25],[110,10,9,.2],[175,30,14,.3],[250,16,10,.25]]){const X=((cx-s*sp-t*.1)%280+280)%280-40;cloud(Math.floor(X),cy,w);}
+ // distant limestone islands on the horizon
+ for(const [wx,w,h] of islands){const cx=Math.floor((((wx-s*.12)%300)+300)%300-50);
+  for(let dx=-w;dx<=w;dx++){const f=Math.abs(dx)/w,hg=h*(1-f**3)*(.85+.15*Math.sin(dx*1.3+wx)),top=HZ-Math.max(1,Math.round(hg));
+   for(let y=top;y<HZ;y++)put(cx+dx,y,dx<-w*.35?'9aa9cc':'aebcdc');put(cx+dx,top,'cdd6ec');
+   if(Math.abs(dx)%5===2&&top+2<HZ)put(cx+dx,top+2,'93a6c8');}}
+ // sea
+ for(let y=HZ;y<96;y++){const f=Math.min(1,(y-HZ)/26),base=[0,1,2].map(k=>Math.round(SEA0[k]+(SEA1[k]-SEA0[k])*f));
+  for(let x=0;x<CW;x++){let c=base;
+   if(y%3===0&&((x+Math.floor(s*.5*(1+f))+Math.floor(t*.3)+y*13)%29)<3+Math.floor(f*3))c='c4ecf7';
+   if(Math.abs(x-165.5)<2+(y-HZ)*.3&&y%2===0&&((x+y+Math.floor(t/2))%4)<2)c='fff2c8';
+   if(((x*3+y*11+Math.floor(t/4)*7)%97)===0)c='ffffff';
+   put(x,y,c);}}
+ for(let x=0;x<CW;x++)put(x,HZ,'cfeef8');
+ // sailboat
+ {const bx=Math.floor((((150-t*.15-s*.1)%260)+260)%260-30),by=74+Math.round(Math.sin(t*.15));
+  for(let i=0;i<9;i++)for(let x=1;x<=1+Math.floor(i*.7);x++)put(bx+x,by-10+i,'ffffff');
+  for(let i=0;i<6;i++)for(let x=-1;x>=-1-Math.floor(i*.5);x--)put(bx+x,by-7+i,'ffd0e2');
+  for(let y=by-11;y<by;y++)put(bx,y,'3a1f2e');
+  for(let x=-4;x<=4;x++)put(bx+x,by,'a8664e');for(let x=-3;x<=3;x++)put(bx+x,by+1,'7a4a3a');
+  for(let x=-5;x<=5;x+=2)put(bx+x,by+2,'c4ecf7');}
+ // beach: sand, wet sand, foam
+ for(let y=88;y<CH;y++)for(let x=0;x<CW;x++)if(y>=92)put(x,y,'f7e2bc');
+ for(let x=0;x<CW;x++){const sy=91+Math.round(2*Math.sin(t*.12)+Math.sin((x+s)*.11));
+  for(let y=88;y<sy;y++){const f=Math.min(1,(y-HZ)/26);put(x,y,[0,1,2].map(k=>Math.round(SEA0[k]+(SEA1[k]-SEA0[k])*f)));}
+  put(x,sy,'ffffff');put(x,sy+1,((x+Math.floor(t/2))%3)?'e8f6fb':'ffffff');
+  for(let y=sy+2;y<Math.max(sy+4,96);y++)put(x,y,'e3c595');
+  put(x,Math.max(sy+4,96),'ecd2a6');}
+ for(let x=0;x<CW;x++)if(((x+s)%11)===0)put(x,104+((x+s)%3)*4,'ead1a4');
+ // shells, starfish, pebbles
+ for(const [wx,y,k] of shells){const x=(((wx-s)%400)+400)%400-100;
+  if(k===0){put(x,y,'ffb3c8');put(x+1,y,'ffffff');put(x,y-1,'ff8fb0');}
+  else if(k===1){for(const [a,b] of [[0,0],[1,0],[-1,0],[0,1],[0,-1]])put(x+a,y+b,'ff9f7a');put(x,y,'ffc09f');}
+  else{put(x,y,'d9c2a0');put(x+1,y,'c8ad88');}}
+ // beach spot at the end: umbrella, towel, palm tree
  const X0=108+(WALK-s);
  const p=(x,y,c)=>put(X0+x,y,c),rect=(x0,y0,x1,y1,c)=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)p(x,y,c);};
- const base=108;
- rect(0,58,55,base,'3a1f2e');rect(1,59,54,base-1,'fff3e6');rect(1,92,54,base-1,'f2d4c4');for(let x=1;x<55;x+=4)rect(x,92,x,base-1,'e8c0b0');
- for(let i=0;i<=12;i++){rect(27-2*i-2,46+i,28+2*i+2,46+i,'3a1f2e');}       // gable roof outline
- for(let i=1;i<=11;i++){rect(27-2*i,46+i,28+2*i,46+i,i%2?'b55a7c':'c96a8c');}
- rect(-3,58,58,58,'3a1f2e');
- rect(14,47,41,55,'3a1f2e');rect(15,48,40,54,'fff3e6');                      // sign board
- let sx=18;for(const ch of 'CAFE'){FONT[ch].forEach((row,yy)=>[...row].forEach((v,xx)=>{if(v==='1')p(sx+xx,49+yy,'b55a7c');}));sx+=5;}
- rect(36,51,38,53,'7a4a3a');p(39,52,'7a4a3a');p(36,50,'7a4a3a');p(38,50,'7a4a3a'); // cup
- for(let k=0;k<3;k++){const yy=48-((Math.floor(t/3)+k*2)%6),xx=37+((Math.floor(t/4)+k)%2);if(yy>42)p(xx,yy,'ffffff');}
- rect(-2,62,57,62,'3a1f2e');for(let x=-1;x<57;x++)rect(x,63,x,67,Math.floor((x+4)/4)%2===0?'ffffff':'ff8fbf');
- for(let x=-1;x<57;x+=4){p(x+1,68,'ff8fbf');p(x+2,68,'ff8fbf');}rect(-2,67,57,67,'e2639a');
- rect(5,72,22,88,'3a1f2e');rect(6,73,21,87,'bfe3ef');rect(13,73,14,87,'3a1f2e');rect(6,80,21,80,'3a1f2e');rect(7,74,9,75,'ffffff');rect(16,74,18,75,'ffffff');
- rect(4,89,23,90,'3a1f2e');for(let x=5;x<23;x+=3){p(x,88,'ff5c9a');p(x+1,88,'6aa84f');}
- rect(30,74,46,base-1,'3a1f2e');rect(31,75,45,base-1,'a8664e');rect(33,77,43,88,'c98a6a');rect(34,78,42,87,'ffe9b8');p(43,94,'ffd34d');p(43,95,'ffd34d');
- rect(48,70,50,73,'ffd34d');p(49,69,'3a1f2e');
- rect(25,100,28,base-1,'c2436e');rect(24,95,29,99,'6aa84f');p(26,94,'ff8fbf');
- rect(49,100,52,base-1,'c2436e');rect(48,95,53,99,'6aa84f');p(51,94,'ffd34d');
+ // towel
+ rect(2,103,30,108,'3a1f2e');for(let x=3;x<=29;x++)rect(x,104,x,107,Math.floor(x/3)%2?'ffd34d':'ff8fbf');
+ // umbrella
+ rect(17,66,18,102,'3a1f2e');rect(17,67,17,101,'f3e4d6');
+ for(let y=58;y<=67;y++){const w=Math.round(14*Math.sqrt(1-((67-y)/10)**2));
+  for(let x=-w;x<=w;x++){const edge=Math.abs(x)===w||y===58+(w<3?0:-99);p(18+x,y,edge?'3a1f2e':(Math.floor((x+14)/4)%2?'ffffff':'ff5c9a'));}}
+ for(let x=-14;x<=14;x++){p(18+x,68,'3a1f2e');if(x%4===0)p(18+x,69,'3a1f2e');}
+ rect(17,56,18,57,'3a1f2e');
+ // bucket
+ rect(32,100,36,106,'3a1f2e');rect(33,101,35,105,'4aa8d0');p(34,99,'3a1f2e');p(31,99,'3a1f2e');p(37,99,'3a1f2e');
+ // palm tree
+ for(let i=0;i<50;i++){const y=108-i,x=48-Math.round((i/50)**2*9);rect(x-1,y,x+1,y,'3a1f2e');p(x,y,(Math.floor(i/3)%2)?'b5845a':'9a6a45');}
+ const tx=39,ty=58;
+ for(const [dir,len,lift] of [[-1,16,4],[1,16,4],[-1,11,9],[1,12,9],[-1,7,-2],[1,8,-2]]){
+  for(let j=0;j<=len;j++){const x=tx+dir*j,y=ty-Math.round(lift*Math.sin(j/len*Math.PI*.6))+Math.round(j*j/(len*1.2));
+   p(x,y,'3f8a3a');p(x,y+1,'5fae4c');if(j%2===0&&j>2)p(x,y+2,'3f8a3a');}}
+ for(const [a,b] of [[-1,1],[1,1],[0,2]]){p(tx+a,ty+b,'7a4a2a');p(tx+a,ty+b+1,'5a3420');}
  // girl
  const GX=40,GY=50,spr=t<WALK?SPR[Math.floor(t/3)%4]:IDLE;
  for(let y=0;y<60;y++)for(let x=0;x<40;x++){const c=spr[y*40+x];if(c)put(GX+x,GY+y,c);}
  if(t>=WALK+6&&Math.floor((t-WALK)/6)%2===0)for(const [a,b] of [[1,0],[3,0],[0,1],[1,1],[2,1],[3,1],[4,1],[1,2],[2,2],[3,2],[2,3]])put(GX+15+a,GY-6+b,'ff5c9a');
- // butterflies
- const cx=GX+20,cy=GY+28;
- [['ff5c9a',30,22,.09,0],['ffd34d',26,16,.12,2.1],['c9a0ff',34,26,.07,4.2]].forEach(([col,ax,ay,sp,ph],k)=>{
-  const a=t*sp+ph,bx=Math.floor(cx+ax*Math.cos(a)),by=Math.floor(cy-6+ay*Math.sin(2*a)/1.6+3*Math.sin(t*.4+k));
-  put(bx,by,'3a1f2e');put(bx,by+1,'3a1f2e');
-  const wings=(Math.floor(t/2)+k)%2===0?[[-2,-1],[-1,-1],[-2,0],[-1,0],[-1,1],[1,-1],[2,-1],[1,0],[2,0],[1,1]]:[[-1,-1],[-1,0],[1,-1],[1,0]];
-  for(const [u,v] of wings)put(bx+u,by+v,col);});
+ // seagulls
+ [[40,26,.45,0],[120,18,.35,1.7],[200,34,.5,3.1],[250,22,.4,4.4]].forEach(([wx,wy,sp,ph],k)=>{
+  const gx=Math.floor((((wx-t*sp-s*.2)%280)+280)%280-40),gy=Math.floor(wy+2*Math.sin(t*.1+ph));
+  const up=(Math.floor(t/3)+k)%2===0;
+  put(gx,gy,'4a5a72');put(gx+1,gy,'ffffff');
+  const wing=up?[[-1,-1],[-2,-2],[-3,-2],[2,-1],[3,-2],[4,-2]]:[[-1,0],[-2,0],[-3,1],[2,0],[3,0],[4,1]];
+  for(const [u,v] of wing)put(gx+u,gy+v,'4a5a72');});
  return {w:CW,h:CH,data:d};}
 return {render,N,WALK,CW,CH};})();
 
